@@ -39,3 +39,38 @@ The candidate pool was limited to results returned by the GitHub search and was 
 Eligibility confirmation establishes that the files meet the inclusion criteria; it does not establish whether they contain code smells or whether any detected smells are harmful in context. These questions will be addressed separately during detection and manual auditing.
 
 Any further discrepancies between the frozen plan and the executed procedure will be documented without retrospectively changing the original plan.
+## Manual audit procedure and preliminary results
+
+### Audit scope
+
+Manual auditing was performed on 20 detector-positive findings across three selected smell categories: Insecure URLs (13 findings), Missing Dependency Version (5 findings), and Duplicate (Code/Dependency) (2 findings). The individual findings and their supporting evidence are recorded in `audit/manual_audit.csv`.
+
+### Audit criteria
+
+Each finding was reviewed using three criteria:
+
+- **Source check:** Whether the relevant source file and evidence were inspected.
+- **Definition match:** Whether the observed source evidence matched the selected smell definition.
+- **Contextual harm:** Whether the evidence indicated contextual harm. Findings were classified as `No` when harm was not demonstrated and `Unclear` when the available evidence was insufficient to reach a confident conclusion.
+
+The audit considered surrounding build-file context rather than treating every textual match as evidence of a harmful smell. For example, HTTP strings in XML namespace declarations are not equivalent to insecure dependency-download endpoints, and dependencies without inline versions may receive versions through Maven dependency management.
+
+### Preliminary results
+
+Of the 20 audited findings, 5 were classified as matching the selected smell definition and 15 were classified as not matching it. Eighteen findings were classified as showing no contextual harm in the examined evidence, while two were classified as unclear.
+
+The definition-match counts were:
+
+- Insecure URLs: 3 of 13 matched the selected definition.
+- Missing Dependency Version: 0 of 5 matched the selected definition.
+- Duplicate (Code/Dependency): 2 of 2 matched the selected definition.
+
+These are preliminary descriptive results for the audited findings. They do not establish the detector's overall accuracy or recall.
+
+### Audit limitations
+
+The audit examined detector-positive findings in three selected categories. It did not systematically inspect all detector-negative files and checks for missed instances of these smells. Consequently, recall and the total number of false negatives cannot be calculated from this audit alone.
+
+A definition match does not necessarily demonstrate contextual harm. Likewise, a finding classified as showing no contextual harm is limited to the evidence examined and does not establish that the wider project is free of security or build-quality issues. The combined Duplicate (Code/Dependency) category also does not always identify which underlying detector check produced a result.
+
+The classifications and results should therefore be interpreted within the scope of the 20 reviewed findings and the evidence recorded in `audit/manual_audit.csv`.
