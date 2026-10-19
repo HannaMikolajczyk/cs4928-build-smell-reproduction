@@ -1,1 +1,22 @@
+
 sample_id,repository,file_path,build_system,public_access,java_project,valid_build_file,decision,reason
+S001,thomas12523/TPO---APIS,pom.xml,maven,yes,yes,yes,include,Verified by group
+S002,BITCROW-org/BlackyTV,build.gradle,gradle,yes,yes,yes,include,Verified by group
+S003,arejmaci/microservicios-kafka-curso,products-api/pom.xml,maven,yes,yes,yes,include,Verified by group
+S004,hongthaiktv/android_wallet,app/build.gradle,gradle,yes,yes,yes,include,Verified by group
+S005,fbrj33/coutry_service,pom.xml,maven,yes,yes,yes,include,Verified by group
+S006,Deserag/slavic-myths,build.gradle,gradle,yes,yes,yes,include,Verified by group
+S007,afonsocoelho07/LP2627_En-5_C1,LP_PL1_Grupo_5/pom.xml,maven,yes,yes,yes,include,Verified by group
+S008,LuoDi-Nate/financial-management,pom.xml,maven,yes,yes,yes,include,Verified by group
+S009,synthetichealth/synthea,build.gradle,gradle,yes,yes,yes,include,Verified by group
+S010,cfranksteam-maker/EnglandFabricCheck,app/build.gradle,gradle,yes,yes,yes,include,Verified by group
+S011,lcsalvess/banking-system,pom.xml,maven,yes,yes,yes,include,Verified by group
+S012,tonylibs/dapr-workflow-spec,dws-step/pom.xml,maven,yes,yes,yes,include,Verified by group
+S013,Nyxxiedev/DogController,pom.xml,maven,yes,yes,yes,include,Verified by group
+S014,Vatsasarthak/RelayForge,pom.xml,maven,yes,yes,yes,include,Verified by group
+S015,Ammar-9028/jenkins-main,pom.xml,maven,yes,yes,yes,include,Verified by group
+S016,zhiyuan213/document-assistant,backend/pom.xml,maven,yes,yes,yes,include,Verified by group
+S017,antono4/android-movie-catalog-app,app/build.gradle,gradle,yes,yes,yes,include,Verified by group
+S018,SpongeBoy128/UbiquitousComputing-Lab3,PhoneDetect/build.gradle.kts,gradle,yes,yes,yes,include,Verified by group
+S019,Ziko145/DevSecOps-Employee,pom.xml,maven,yes,yes,yes,include,Verified by group
+S020,RavoxX/MCVoice,tools/mc-smoke/startup/build.gradle,gradle,yes,yes,yes,include,Verified by group
