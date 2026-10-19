@@ -1,0 +1,13 @@
+CS4928 candidate collection
+UTC timestamp: 2026-10-19T17:45:03.994240+00:00
+GitHub query: language:Java
+Repository search ordering: updated descending
+Maximum repositories requested: 100
+Repositories returned: 100
+Maximum candidates: 300
+Maximum candidates per repository: 5
+Candidates recorded: 112
+Build-file names: pom.xml, build.gradle, build.gradle.kts
+Detector executed: no
+Selection based on detector output: no
+Limitation: GitHub search is not an exhaustive or random sample. Screen candidates against the project eligibility criteria before freezing the final sample.

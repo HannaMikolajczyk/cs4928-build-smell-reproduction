@@ -1,37 +1,25 @@
-﻿# Bounded Sample Collection Method — P13
+# Sample Selection Method
 
-## Target sample
-20 build files in total from public Java projects using Maven or Gradle.
+## Original plan
 
-## Collection procedure
-1. Search public GitHub repositories for supported build-file names:
-   - Maven: `pom.xml`
-   - Gradle: `build.gradle` and `build.gradle.kts`
-2. Record eligible candidates and their repository, file path, source URL, and exact commit.
-3. Apply the inclusion and exclusion criteria below before running the smell detector.
-4. Remove duplicate entries.
-5. Sort eligible candidates using a predefined, reproducible order: repository identifier, file path, then commit date where needed.
-6. Select the first 20 eligible files in that order. If fewer than 20 eligible files can be found, use all eligible files and document the shortfall.
-7. Freeze the selected sample identifiers before the main analysis.
-8. Preserve the source files and run the detector only on disposable copies.
+The Week 5 sampling approach is recorded in the frozen assessment tracker. It will not be retrospectively rewritten.
 
-## Inclusion criteria
-- The file is publicly accessible on GitHub.
-- The repository is a Java project.
-- The file is a Maven or Gradle build script.
-- The file can be retrieved at a specific repository revision.
+## Executed sample
 
-## Exclusion criteria
-- Duplicate entries for the same build file and revision.
-- Files that are not genuine Maven or Gradle build scripts.
-- Files from projects that do not meet the Java-project requirement.
-- Files whose source content cannot be retrieved.
+The assigned reproduction scope is 20 eligible Maven or Gradle build files from Java projects, subject to the applicable inclusion and exclusion criteria.
 
-## Important analysis rule
-Do not exclude a selected file solely because the sniffer crashes, reports a parsing problem, or cannot analyse it successfully. Record the failure and assess its impact on the bounded reproduction instead.
+## Selection procedure
 
-## Reproducibility
-Maintain the candidate and final sample records in `sample_register.csv`. Record the collection date, repository URL, commit hash, file path, inclusion decision, and any exclusions. Keep the selected sample and analysis evidence under version control.
+The exact executed selection procedure, search queries, ordering rule, exclusions, and any deviations from the frozen plan will be recorded here before the main analysis is finalised.
 
-## Relationship to the original study
-The original paper collected build scripts using build-system filename searches and removed duplicates. This reproduction uses a narrower sample of 20 Maven/Gradle build files from Java projects, as required by the P13 project pack.
+## Case identification
+
+Each selected build file will receive a stable case ID. The sample register will record the repository URL, repository name, build-file path, build system, and commit SHA.
+
+## Inclusion of zero-detection files
+
+All selected eligible files will remain in the sample, including files for which the detector reports no smells.
+
+## Limitations and deviations
+
+Any discrepancy between the frozen Week 5 sampling plan and the executed selection procedure will be documented, with its rationale and potential effect on the results.

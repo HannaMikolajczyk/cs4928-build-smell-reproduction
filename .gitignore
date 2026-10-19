@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Downloaded repositories and temporary files
+repos/
+tmp/
+audit/oracleJdk-27/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Machine-specific files
+.DS_Store
+Thumbs.db
