@@ -1,0 +1,594 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+version = mod_version
+group = mod_group_id
+base { archivesName = 'slavicmyths' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+repositories {
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+    maven { url = 'https://maven.theillusivec4.top/' }
+    maven { url = 'https://maven.blamejared.com' }
+    mavenCentral()
+}
+
+
+neoForge {
+    version = project.neo_version
+    accessTransformers = files("src/main/resources/META-INF/accesstransformer.cfg")
+    runs {
+        client { client(); gameDirectory = file('run') }
+        server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
+    }
+    mods { slavicmyths { sourceSet sourceSets.main } }
+}
+dependencies {
+    // Optional, client-only adapter compiled against the exact pinned API; never bundled/runtime-required.
+    compileOnly 'maven.modrinth:xaeros-minimap:Q1tuMQBB' // NeoForge 1.21.1 / 26.5.0, immutable version ID.
+    implementation "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    if (!project.hasProperty('withoutJei')) {
+        runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+processResources {
+    inputs.properties([mod_version: mod_version, neo_version: neo_version])
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand mod_version: mod_version, neo_version: neo_version
+    }
+}
+jar { manifest { attributes 'Implementation-Version': project.version } }
+
+// Plain JVM, no NeoForge run configuration and no game/world construction.
+if (project.hasProperty('barrelOfflineCheck')) {
+    sourceSets { barrelOffline { java.srcDir 'tools/barrel-offline' } }
+    sourceSets.barrelOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.barrelOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.register('verifyFermentationOffline', JavaExec) {
+        dependsOn 'barrelOfflineClasses'
+        classpath = sourceSets.barrelOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.brewing.FermentationOffline'
+    }
+}
+
+// Chud city fixtures are opt-in, with a separate smoke world and no production test classes.
+if (project.hasProperty('chudCheck')) {
+    sourceSets { chudCheck { java.srcDir 'tools/chud-tests'; resources.srcDir 'tools/chud-test-resources' } }
+    sourceSets.chudCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.chudCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileChudCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.chudCheck)
+    neoForge.runs { chudChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-chud-151')
+        systemProperty 'neoforge.enabledGameTestNamespaces', (project.hasProperty('abandonedCheck') ? 'slavicmyths_abandoned' : 'slavicmyths_chud') + (project.hasProperty('chudTerrainCheck') ? ',slavicmyths_chud_terrain' : '') + (project.hasProperty('chudFullCheck') ? ',slavicmyths_chud_full' : '') + (project.hasProperty('abandonedTerrainCheck') ? ',slavicmyths_abandoned_terrain' : '') + (project.hasProperty('abandonedFullCheck') ? ',slavicmyths_abandoned_full' : '') + (project.hasProperty('chudRegressionCheck') ? ',slavicmyths_chud' : '') + (project.hasProperty('abandonedFinderCheck') ? ',slavicmyths_abandoned_finder' : '')
+        systemProperty 'slavicmyths.chudRoot', project.projectDir.absolutePath
+    } }
+}
+
+// Weapon 2.0 fixtures are opt-in and never enter the production artifact.
+if (project.hasProperty('weaponRuntimeCheck')) {
+    sourceSets { weaponCheck { java.srcDir 'tools/weapon-tests'; resources.srcDir 'tools/weapon-test-resources' } }
+    sourceSets.weaponCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.weaponCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileWeaponCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.weaponCheck)
+    neoForge.runs { weaponChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-weapons-1321')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_weapons'
+        systemProperty 'slavicmyths.weaponRestartPhase', project.findProperty('weaponRestartPhase') ?: 'none'
+    } }
+}
+
+// Class 2.0 fixtures are opt-in and never enter the production artifact.
+if (project.hasProperty('classRuntimeCheck')) {
+    sourceSets { classCheck { java.srcDir 'tools/class-tests'; resources.srcDir 'tools/class-test-resources' } }
+    sourceSets.classCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.classCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileClassCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.classCheck)
+    neoForge.runs { classChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-classes-131')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_classes'
+        systemProperty 'slavicmyths.classRestartPhase', project.findProperty('classRestartPhase') ?: 'none'
+    } }
+}
+
+// Opt-in 1.2.1 dedicated-server checks, isolated from the shipped mod and all player worlds.
+if (project.hasProperty('villageRuntimeCheck')) {
+    sourceSets {
+        villageCheck { java.srcDir 'tools/village-tests'; resources.srcDir 'tools/village-test-resources' }
+    }
+    sourceSets.villageCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.villageCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileVillageCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.villageCheck)
+    neoForge.runs {
+        villageChecks {
+            type = 'gameTestServer'
+            gameDirectory = file(project.findProperty('villageCheckDirectory') ?: (project.hasProperty('gorodishcheCheck') ? 'run-gorodishche-checks' : project.hasProperty('villageBuildingsCheck') ? 'run-village-buildings-checks' : 'run-village-checks'))
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.hasProperty('gorodishcheCheck') ? 'slavicmyths_city' : project.hasProperty('villageBuildingsCheck') ? 'slavicmyths_buildings' : 'slavicmyths_village'
+            systemProperty 'slavicmyths.settlementRestartPhase', project.findProperty('settlementRestartPhase') ?: 'none'
+        }
+    }
+    tasks.register('verifyVillageGeometry', JavaExec) {
+        dependsOn 'villageCheckClasses'
+        classpath = sourceSets.villageCheck.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.VillageGeometryCheck'
+    }
+}
+// Verification remains outside production. API migration is tracked in PORT_STATUS.
+sourceSets {
+    kurganCheck {
+        java.srcDir 'tools/kurgan-tests'
+        resources.srcDir 'tools/kurgan-test-resources'
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+tasks.register('verifyNavigation', JavaExec) {
+    dependsOn 'kurganCheckClasses'
+    classpath = sourceSets.kurganCheck.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.NavigationHeadless'
+}
+// Registry-dependent checks require a real loader. Selecting an alias enables
+// the isolated GameTest run; invoking several aliases still runs the server once.
+def loaderCheckAliases = ['verifyYaga', 'verifyYagaPlacement', 'verifyPortRecipes', 'verifyPortDamage']
+loaderCheckAliases.each { name ->
+    tasks.register(name) {
+        description = 'Run registry-dependent checks on the isolated headless GameTest server.'
+        dependsOn 'runRuntimeChecks'
+    }
+}
+
+// Intermediate API checks compile these actual independent production modules
+// without excluding any sources from the real mod. No replacement/stub classes.
+sourceSets {
+    portCore {
+        java.srcDirs = ['src/main/java', 'tools/kurgan-tests']
+        java.include 'org/slavicmyths/kurgan/KurganPlan.java',
+                'org/slavicmyths/kurgan/KurganLayout.java',
+                'org/slavicmyths/kurgan/KurganPlanNbt.java',
+                'org/slavicmyths/kurgan/KurganInstance.java',
+                'org/slavicmyths/kurgan/KurganEncounterState.java',
+                'org/slavicmyths/kurgan/KurganFighter.java',
+                'org/slavicmyths/kurgan/KurganRoster.java',
+                'org/slavicmyths/kurgan/BurialRecords.java',
+                'org/slavicmyths/hunt/HuntRecords.java',
+                'org/slavicmyths/hunt/HuntTarget.java',
+                'org/slavicmyths/hunt/BossKind.java',
+                'org/slavicmyths/hunt/BossRules.java',
+                'org/slavicmyths/hunt/HuntRules.java',
+                'org/slavicmyths/hunt/ElementRules.java',
+                'org/slavicmyths/hunt/DashFacing.java',
+                'org/slavicmyths/rpg/RpgNbt.java',
+                'org/slavicmyths/armorer/ArmorerRecipe.java',
+                'org/slavicmyths/armorer/ArmorerInput.java',
+                'org/slavicmyths/item/ItemState.java',
+                'org/slavicmyths/registry/ModEffects.java',
+                'org/slavicmyths/registry/ModSounds.java',
+                'org/slavicmyths/kurgan/KurganCurse.java',
+                'org/slavicmyths/yaga/YagaHutPlan.java',
+                'org/slavicmyths/depth/PoolIndex.java',
+                'org/slavicmyths/verify/KurganHeadless.java',
+                'org/slavicmyths/verify/KurganReworkHeadless.java',
+                'org/slavicmyths/verify/HuntHeadless.java',
+                'org/slavicmyths/verify/PortDataHeadless.java',
+                'org/slavicmyths/verify/PortRecipesHeadless.java',
+                'org/slavicmyths/verify/PortComponentsHeadless.java',
+                'org/slavicmyths/network/MythPayloads.java',
+                'org/slavicmyths/network/ClientPayloadEvents.java',
+                'org/slavicmyths/network/LoreNetwork.java',
+                'org/slavicmyths/item/ClubItem.java',
+                'org/slavicmyths/item/HeavyWeaponItem.java',
+                'org/slavicmyths/item/SpearItem.java',
+                'org/slavicmyths/item/MythShieldItem.java',
+                'org/slavicmyths/item/AncientCoinItem.java',
+                'org/slavicmyths/item/AncientSignItem.java',
+                'org/slavicmyths/item/AmberCharmItem.java',
+                'org/slavicmyths/item/PerunCharmItem.java',
+                'org/slavicmyths/item/BerryMorsItem.java',
+                'org/slavicmyths/item/SevenLeagueBoots.java',
+                'org/slavicmyths/item/ThunderAxeItem.java',
+                'org/slavicmyths/combat/MaceItem.java',
+                'org/slavicmyths/combat/FlailItem.java',
+                'org/slavicmyths/verify/PortPayloadsHeadless.java',
+                'org/slavicmyths/client/FolkModelGeometry.java',
+                'org/slavicmyths/water/ReedBlock.java',
+                'org/slavicmyths/yaga/YagaLegBlock.java',
+                'org/slavicmyths/verify/PortGeometryHeadless.java',
+                'org/slavicmyths/flight/Tailwind.java',
+                'org/slavicmyths/combat/MythDamageSources.java',
+                'org/slavicmyths/verify/PortDamageHeadless.java'
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += configurations.runtimeClasspath
+    }
+}
+['Kurgan', 'Hunt'].each { system ->
+    tasks.register("verify${system}", JavaExec) {
+        dependsOn 'portCoreClasses'
+        classpath = sourceSets.portCore.runtimeClasspath
+        mainClass = "org.slavicmyths.verify.${system}Headless"
+    }
+}
+tasks.register('verifyPortData', JavaExec) {
+    dependsOn 'portCoreClasses'
+    classpath = sourceSets.portCore.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.PortDataHeadless'
+    args file('docs/verification/yaga-0.9.3/hut-plan.json').absolutePath
+}
+tasks.register('verifyPortCore') { dependsOn 'verifyKurgan', 'verifyHunt', 'verifyPortData' }
+tasks.register('verifyKurganRework', JavaExec) {
+    dependsOn 'portCoreClasses'
+    classpath = sourceSets.portCore.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.KurganReworkHeadless'
+}
+
+tasks.register('verifyPortComponents', JavaExec) {
+    dependsOn 'portCoreClasses'
+    classpath = sourceSets.portCore.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.PortComponentsHeadless'
+}
+
+tasks.register('verifyPortPayloads', JavaExec) {
+    dependsOn 'portCoreClasses'
+    classpath = sourceSets.portCore.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.PortPayloadsHeadless'
+}
+
+tasks.register('verifyPortGeometry', JavaExec) {
+    dependsOn 'portCoreClasses'
+    classpath = sourceSets.portCore.runtimeClasspath
+    mainClass = 'org.slavicmyths.verify.PortGeometryHeadless'
+}
+
+// Loader-backed headless checks share the actual mod in this opt-in run only.
+// They never enter the production JAR or the ordinary client/server configurations.
+if (project.hasProperty('portRuntimeCheck') || gradle.startParameter.taskNames.any {
+    loaderCheckAliases.contains(it.tokenize(':').last())
+}) {
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.kurganCheck)
+    neoForge.runs {
+        runtimeChecks {
+            type = 'gameTestServer'
+            gameDirectory = project.hasProperty('kurganHotfixCheck') ? file('run-kurgan-hotfix') : project.hasProperty('placementOverrideCheck') ? file(project.hasProperty('waterFlatPlacementCheck') ? 'run-placement-priority-water' : project.hasProperty('highFlatPlacementCheck') ? 'run-placement-priority-high' : 'run-placement-priority-thin') : file('run-port-checks')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.hasProperty('kurganHotfixCheck') ? 'slavicmyths_hotfix' : project.hasProperty('placementOverrideCheck') ? (project.hasProperty('waterFlatPlacementCheck') ? 'slavicmyths_water_placement' : project.hasProperty('terrainPlacementCheck') ? 'slavicmyths_terrain_placement' : project.hasProperty('sequentialPlacementCheck') ? 'slavicmyths_sequential_placement' : 'slavicmyths_placement') : project.hasProperty('naturalCoverageCheck') ? 'slavicmyths_coverage' : 'slavicmyths'
+            systemProperty 'slavicmyths.portRoot', project.projectDir.absolutePath
+        }
+    }
+}
+
+if (project.hasProperty('portRuntimeCompanions')) {
+    dependencies {
+        runtimeOnly fileTree('.tools/test-pack-0.9.4') {
+            include '*.jar'
+            exclude 'curios-*.jar', 'jei-*.jar'
+        }
+    }
+}
+
+// Test-only high superflat preset, matching the reported save; never in production resources.
+if (project.hasProperty('highFlatPlacementCheck')) { sourceSets.kurganCheck.resources.srcDir 'tools/manual-high-test-resources' }
+
+if (project.hasProperty("waterFlatPlacementCheck")) {
+    sourceSets.kurganCheck.resources.srcDir "tools/manual-water-test-resources"
+}
+
+// The isolated legacy harness also sees registry classes referenced by new native effects.
+sourceSets.portCore.compileClasspath += sourceSets.main.output
+tasks.named('compilePortCoreJava') { dependsOn 'classes' }
+
+// Rare weapon fixtures remain outside all production outputs.
+// Offline JVM checks: no Minecraft main, client, server, world, or mod-loader run.
+if (project.hasProperty('runeReworkOfflineCheck')) {
+    sourceSets { runeReworkOffline { java.srcDir 'tools/rune-rework-tests' } }
+    sourceSets.runeReworkOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.runeReworkOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.named('compileRuneReworkOfflineJava') { dependsOn 'classes' }
+    tasks.register('verifyRuneRework', JavaExec) {
+        dependsOn 'runeReworkOfflineClasses'
+        classpath = sourceSets.runeReworkOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.RuneReworkOffline'
+    }
+}
+if (project.hasProperty('runeFoundationOfflineCheck')) {
+    sourceSets { runeFoundationOffline { java.srcDir 'tools/rune-foundation-tests' } }
+    sourceSets.runeFoundationOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.runeFoundationOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.named('compileRuneFoundationOfflineJava') { dependsOn 'classes' }
+    tasks.register('verifyRuneFoundation', JavaExec) {
+        dependsOn 'runeFoundationOfflineClasses'
+        classpath = sourceSets.runeFoundationOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.RuneFoundationOffline'
+    }
+}
+if (project.hasProperty('armorOfflineCheck')) {
+    sourceSets { armorOffline { java.srcDir 'tools/armor-offline-tests' } }
+    sourceSets.armorOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.armorOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.named('compileArmorOfflineJava') { dependsOn 'classes' }
+    tasks.register('verifyArmorRunes', JavaExec) {
+        dependsOn 'armorOfflineClasses'
+        classpath = sourceSets.armorOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.ArmorRunesOffline'
+        workingDir = file('.tools')
+    }
+}
+
+if (project.hasProperty('rareRuntimeCheck')) {
+    sourceSets { rareCheck { java.srcDir 'tools/rare-tests'; resources.srcDir 'tools/rare-test-resources' } }
+    sourceSets.rareCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.rareCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileRareCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.rareCheck)
+    neoForge.runs { rareChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-rare-1322')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_rare'
+        systemProperty 'slavicmyths.rareRestartPhase', project.findProperty('rareRestartPhase') ?: 'none'
+    } }
+}
+
+// Pure rare-rune fixtures are excluded from production and all NeoForge run configurations.
+if (project.hasProperty('rareRuneOfflineCheck')) {
+    sourceSets { rareRuneOffline { java.srcDir 'tools/rare-rune-tests' } }
+    sourceSets.rareRuneOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.rareRuneOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.named('compileRareRuneOfflineJava') { dependsOn 'classes' }
+    tasks.register('verifyRareRunes', JavaExec) {
+        dependsOn 'rareRuneOfflineClasses'
+        classpath = sourceSets.rareRuneOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.RareRuneOffline'
+    }
+}
+
+// Opt-in 1.3.4.4 combat regression server; fixtures never enter the production JAR.
+if (project.hasProperty('combatRuntimeCheck')) {
+    sourceSets { combatCheck { java.srcDir 'tools/combat-fix-tests'; resources.srcDir 'tools/combat-fix-test-resources' } }
+    sourceSets.combatCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.combatCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileCombatCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.combatCheck)
+    neoForge.runs { combatFixes {
+        type = 'gameTestServer'
+        gameDirectory = file('run-combat-1344')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_combat'
+    } }
+}
+// Opt-in Tugarin tests; production JAR excludes fixtures.
+if (project.hasProperty('tugarinRuntimeCheck')) {
+    sourceSets { tugarinCheck { java.srcDir 'tools/tugarin-tests'; resources.srcDir 'tools/tugarin-test-resources' } }
+    sourceSets.tugarinCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.tugarinCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileTugarinCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.tugarinCheck)
+    neoForge.runs { tugarinChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-tugarin-13451')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_tugarin'
+    } }
+}
+if (project.hasProperty('tugarinModelOfflineCheck')) {
+    sourceSets { tugarinModelOffline { java.srcDir 'tools/tugarin-model-tests' } }
+    sourceSets.tugarinModelOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.tugarinModelOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    tasks.register('verifyTugarinModels', JavaExec) {
+        dependsOn 'tugarinModelOfflineClasses'
+        classpath = sourceSets.tugarinModelOffline.runtimeClasspath
+        mainClass = 'org.slavicmyths.verify.TugarinModelsOffline'
+    }
+}
+
+// Isolated unique-equipment server fixtures; never included in production JARs.
+if (project.hasProperty('uniqueEquipmentCheck')) {
+    sourceSets { uniqueEquipmentCheck { java.srcDir 'tools/unique-equipment-tests'; resources.srcDir 'tools/unique-equipment-test-resources' } }
+    sourceSets.uniqueEquipmentCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    sourceSets.uniqueEquipmentCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+    tasks.named('compileUniqueEquipmentCheckJava') { dependsOn 'classes' }
+    neoForge.mods.slavicmyths.sourceSet(sourceSets.uniqueEquipmentCheck)
+    neoForge.runs { uniqueEquipmentChecks {
+        type = 'gameTestServer'
+        gameDirectory = file('run-unique-equipment-checks')
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_unique'
+        systemProperty 'slavicmyths.uniqueRestartPhase', project.findProperty('uniqueRestartPhase') ?: 'write'
+    } }
+}
+
+// Isolated Grey Wolf 1.4.1 native fixtures, excluded from production.
+if (project.hasProperty('greyWolfCheck')) {
+ sourceSets { greyWolfCheck { java.srcDir 'tools/grey-wolf-tests'; resources.srcDir 'tools/grey-wolf-test-resources' } }
+ sourceSets.greyWolfCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.greyWolfCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+ tasks.named('compileGreyWolfCheckJava') { dependsOn 'classes' }
+ neoForge.mods.slavicmyths.sourceSet(sourceSets.greyWolfCheck)
+ neoForge.runs { greyWolfChecks {
+  type = 'gameTestServer'
+  gameDirectory = file('run-grey-wolf-checks')
+  systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_wolf'
+ } }
+}
+
+if (project.hasProperty('greyWolfModelOfflineCheck')) {
+ sourceSets { greyWolfModelOffline { java.srcDir 'tools/grey-wolf-model-tests' } }
+ sourceSets.greyWolfModelOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.greyWolfModelOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+ tasks.register('verifyGreyWolfModel', JavaExec) {
+  dependsOn 'greyWolfModelOfflineClasses'
+  classpath = sourceSets.greyWolfModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.GreyWolfModelOffline'
+ }
+}
+
+// Isolated 1.4.2 quest/equipment acceptance fixtures, excluded from production.
+if (project.hasProperty('wolfStoryCheck')) {
+ sourceSets { wolfStoryCheck { java.srcDir 'tools/grey-wolf-story-tests'; resources.srcDir 'tools/grey-wolf-story-test-resources' } }
+ sourceSets.wolfStoryCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.wolfStoryCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+ tasks.named('compileWolfStoryCheckJava') { dependsOn 'classes' }
+ neoForge.mods.slavicmyths.sourceSet(sourceSets.wolfStoryCheck)
+ neoForge.runs { wolfStoryChecks {
+  type = 'gameTestServer'
+  gameDirectory = file('run-grey-wolf-story-checks')
+  systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_wolf_story'
+ } }
+}
+
+if (project.hasProperty('finistModelOfflineCheck')) {
+ sourceSets { finistModelOffline { java.srcDir 'tools/finist-model-tests' } }
+ sourceSets.finistModelOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.finistModelOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+ tasks.register('verifyFinistModel', JavaExec) {
+  dependsOn 'finistModelOfflineClasses'
+  classpath = sourceSets.finistModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.FinistModelOffline'
+ }
+}
+
+if (project.hasProperty('volkolakModelOfflineCheck')) {
+ sourceSets { volkolakModelOffline { java.srcDir 'tools/volkolak-model-tests' } }
+ sourceSets.volkolakModelOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.volkolakModelOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+ tasks.register('verifyVolkolakModel', JavaExec) {
+  dependsOn 'volkolakModelOfflineClasses'
+  classpath = sourceSets.volkolakModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.VolkolakModelOffline'
+ }
+}
+
+if (project.hasProperty('volkolakCheck')) {
+ sourceSets { volkolakCheck { java.srcDir 'tools/volkolak-tests'; resources.srcDir 'tools/volkolak-test-resources' } }
+ sourceSets.volkolakCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.volkolakCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+ tasks.named('compileVolkolakCheckJava') { dependsOn 'classes' }
+ neoForge.mods.slavicmyths.sourceSet(sourceSets.volkolakCheck)
+ neoForge.runs { volkolakChecks {
+  type = 'gameTestServer'
+  gameDirectory = file('run-volkolak-checks')
+  systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_volkolak'
+ } }
+}
+
+// This rework's opt-in native combat tests never enter production.
+if (project.hasProperty('bossReworkCheck')) {
+ sourceSets { bossReworkCheck { java.srcDir 'tools/boss-rework-tests'; resources.srcDir 'tools/boss-rework-test-resources' } }
+ sourceSets.bossReworkCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.bossReworkCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+ tasks.named('compileBossReworkCheckJava') { dependsOn 'classes' }
+ neoForge.mods.slavicmyths.sourceSet(sourceSets.bossReworkCheck)
+ neoForge.runs { bossReworkChecks {
+  type = 'gameTestServer'
+  gameDirectory = file('run-boss-rework-checks')
+  systemProperty 'neoforge.enabledGameTestNamespaces', 'slavicmyths_boss_rework'
+ } }
+}
+
+if (project.hasProperty('bossReworkClientCheck')) {
+ sourceSets { bossReworkClientCheck { java.srcDir 'tools/boss-rework-client' } }
+ sourceSets.bossReworkClientCheck.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.bossReworkClientCheck.runtimeClasspath += sourceSets.main.runtimeClasspath
+ tasks.named('compileBossReworkClientCheckJava') { dependsOn 'classes' }
+ neoForge.mods.slavicmyths.sourceSet(sourceSets.bossReworkClientCheck)
+}
+// #49 pure native geometry/policy fixtures: no NeoForge run configuration or production inclusion.
+if (project.hasProperty('rusalkaOfflineCheck')) {
+ sourceSets { rusalkaOffline { java.srcDir 'tools/rusalka-offline' } }
+ sourceSets.rusalkaOffline.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+ sourceSets.rusalkaOffline.runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+ tasks.register('verifyRusalkaOffline', JavaExec) {
+  dependsOn 'rusalkaOfflineClasses'
+  classpath = sourceSets.rusalkaOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.RusalkaOffline'
+ }
+}
+
+
+// Emergency audio quality gate, #59/#60: rejected synthesized vocal cues must not
+// silently reappear. #61 permits exact licensed AGENT_SELECTED recordings; final owner review remains pending.
+tasks.register('verifyRejectedVoiceQuarantine') {
+    doLast {
+        def events = new groovy.json.JsonSlurper().parse(file('src/main/resources/assets/slavicmyths/sounds.json'))
+        def ledger = new groovy.json.JsonSlurper().parse(file('src/main/resources/assets/slavicmyths/audio_licenses/delegated-recordings-61.json'))
+        def permitted = ['vodyanoy_', 'domovoy_', 'leshy_', 'kikimora_', 'polevik_', 'poludnitsa_', 'bannik_', 'igosha_', 'nochnitsa.', 'doghead.']
+        def bad = events.findAll { name, cue ->
+            def quarantine =
+                ['rusalka_', 'vodyanoy_', 'domovoy_', 'leshy_', 'kikimora_',
+                 'polevik_', 'poludnitsa_', 'bannik_', 'igosha_'].any { name.startsWith(it) } ||
+                name ==~ /^nochnitsa\.(ambient|breath|hurt|scream_inhale|scream_release|scream_interrupt|target_spotted|sunrise_dissolve|death)$/ ||
+                name ==~ /^doghead\.(hunter|scout|leader|shared)\.(ambient|bark|spot_bark|howl_inhale|howl_release|hurt|death)$/ ||
+                name ==~ /^firebird_(ambient|call|warning|retaliation|hurt|death)$/
+            def replacement = ledger.events[name]
+            def delegated = permitted.any { name.startsWith(it) } && replacement &&
+                ledger.status == 'AGENT_SELECTED_OWNER_PENDING' && ledger.owner_accepted == false &&
+                cue.sounds.size() == replacement.size() && cue.sounds.every { entry ->
+                    def proof = replacement.find { it.name == entry.name }
+                    def resource = file('src/main/resources/assets/slavicmyths/sounds/' + entry.name.substring('slavicmyths:'.length()) + '.ogg')
+                    entry.name.startsWith('slavicmyths:recorded61/') && proof && resource.isFile() &&
+                    java.security.MessageDigest.getInstance('SHA-256').digest(resource.bytes).encodeHex().toString() == proof.sha256 &&
+                    proof.sources && proof.sources.every { it.license in ['CC-BY-4.0', 'CC0-1.0'] && it.page.startsWith('https://') && it.sha256.size() == 64 }
+                }
+            quarantine && cue.sounds != [] && !delegated
+        }
+        if (!bad.isEmpty()) {
+            throw new GradleException('REJECTED_SYNTHETIC_VOICES: only exact delegated recorded61 replacements permitted, #59/#60/#61: ' + bad.keySet())
+        }
+    }
+}
+tasks.named('processResources') { dependsOn 'verifyRejectedVoiceQuarantine' }
+
+// Opt-in #59/#53 native fixtures; no loader/world bootstrap, never production.
+if (project.hasProperty('rusalkaOfflineCheck')) {
+ tasks.register('verifyQualityCorrections', JavaExec) {
+  dependsOn 'rusalkaOfflineClasses'
+  classpath = sourceSets.rusalkaOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.QualityCorrectionsOffline'
+ }
+}
+if (project.hasProperty('greyWolfModelOfflineCheck')) {
+ tasks.register('verifyGreyWolf54', JavaExec) {
+  dependsOn 'greyWolfModelOfflineClasses'
+  classpath = sourceSets.greyWolfModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.GreyWolf54Offline'
+  systemProperty 'slavicmyths.wolf54Baseline', project.hasProperty('wolf54Baseline')
+ }
+}
+if (project.hasProperty('volkolakModelOfflineCheck')) {
+ tasks.register('verifyCursed55', JavaExec) {
+  dependsOn 'volkolakModelOfflineClasses'
+  classpath = sourceSets.volkolakModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.Cursed55Offline'
+  systemProperty 'slavicmyths.cursed55Baseline', project.hasProperty('cursed55Baseline')
+ }
+}
+
+if (project.hasProperty('tugarinModelOfflineCheck')) {
+ tasks.register('verifyTugarin56', JavaExec) {
+  dependsOn 'tugarinModelOfflineClasses'
+  classpath = sourceSets.tugarinModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.Tugarin56Offline'
+  if(project.hasProperty('tugarin56Baseline')) systemProperty 'slavicmyths.tugarin56Baseline', 'true'
+  if(project.hasProperty('tugarin56Output')) systemProperty 'slavicmyths.tugarin56Output', project.property('tugarin56Output')
+  if(project.hasProperty('tugarin56Timeline')) systemProperty 'slavicmyths.tugarin56Timeline', 'true'
+ }
+}
+
+if (project.hasProperty('tugarinModelOfflineCheck')) {
+ tasks.register('verifyNightingale57', JavaExec) {
+  dependsOn 'tugarinModelOfflineClasses'
+  classpath = sourceSets.tugarinModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.Nightingale57Offline'
+  if(project.hasProperty('nightingale57Baseline')) systemProperty 'slavicmyths.nightingale57Baseline', 'true'
+ }
+}
+
+if (project.hasProperty('tugarinModelOfflineCheck')) {
+ tasks.register('verifyGrip58', JavaExec) {
+  dependsOn 'tugarinModelOfflineClasses'
+  classpath = sourceSets.tugarinModelOffline.runtimeClasspath
+  mainClass = 'org.slavicmyths.verify.Grip58Offline'
+  if(project.hasProperty('grip58Baseline')) systemProperty 'slavicmyths.grip58Baseline', 'true'
+ }
+}
