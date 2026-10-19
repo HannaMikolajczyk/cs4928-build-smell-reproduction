@@ -1,9 +1,0 @@
-CS4928 P13 provisional sample selection
-Candidate source: sample/candidates.csv
-Candidate files: 112
-Repositories with eligible-looking candidates: 56
-Selected files: 20
-Rule: retain one candidate per repository, selected using a SHA-256 hash of a fixed seed, repository name and file path; then select 20 repositories using a fixed-seed hash of the repository name.
-Seed: CS4928-P13-v1
-Detector results were not used in selection.
-Status: provisional. Review project eligibility and the Maven/Gradle balance before freezing the sample.
