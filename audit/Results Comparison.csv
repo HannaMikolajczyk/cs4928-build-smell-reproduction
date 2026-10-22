@@ -1,0 +1,14 @@
+﻿,Our Results,,,The paper's results,
+Samples,Maven,Gradle,,Maven ,Gradle
+Files,12,8,,918,634
+Total LOC,1933,1212,,125502,30872
+,,,,,
+Occurrence,Maven,Gradle,,Maven ,Gradle
+Insecure URLs,2,1,,854,123
+Missing Dependency Version,5,0,,121,24
+Duplicate (Code/Dependency),0,2,,139,116
+,,,,,
+Smell Density (per KLOC),Maven,Gradle,,Maven,Gradle
+Insecure URLs,1.035,0.825,,6.805,3.984
+Missing Dependency Version,2.587,0,,0.964,0.777
+Duplicate (Code/Dependency),0,1.65,,1.108,3.757
