@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'io.quarkus' version '3.39.5'
+}
+
+group = 'org.salarymeter'
+version = '0.1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.39.5')
+    implementation 'io.quarkus:quarkus-config-yaml'
+    implementation 'io.quarkus:quarkus-rest-qute'
+    implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-hibernate-orm'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+    implementation 'io.quarkus:quarkus-flyway'
+    implementation 'io.quarkus:quarkus-elytron-security-common'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    testImplementation 'io.quarkus:quarkus-junit5'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(27)
+    }
+}
+
+def frontendDir = layout.projectDirectory.dir('frontend')
+def frontendOutputDir = layout.projectDirectory.dir('src/main/resources/META-INF/resources')
+
+tasks.register('buildFrontend', Exec) {
+    workingDir frontendDir
+    commandLine 'npm', 'run', 'build'
+    inputs.files(fileTree(frontendDir) {
+        include 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts', 'src/**'
+    })
+    outputs.dir(frontendOutputDir)
+}
+
+test {
+    useJUnitPlatform()
+}
+
+processResources {
+    dependsOn tasks.named('buildFrontend')
+}
