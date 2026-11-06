@@ -17,7 +17,7 @@ OUTPUT.mkdir(parents=True, exist_ok=True)
 with REGISTER.open("r", encoding="utf-8-sig", newline="") as f:
     cases = list(csv.DictReader(f))
 
-if len(cases) != 20:
+if len(cases) != 50:
     raise SystemExit(f"Expected 20 cases, found {len(cases)}")
 
 manifest = []
