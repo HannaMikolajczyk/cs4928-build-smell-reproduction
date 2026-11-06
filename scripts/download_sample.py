@@ -75,7 +75,7 @@ MANIFEST.write_text(
     encoding="utf-8"
 )
 
-print(f"\nDownloaded: {len(manifest)}/20")
+print(f"\nDownloaded: {len(manifest)}/50")
 print(f"Failed: {len(failures)}")
 print(f"Manifest: {MANIFEST}")
 
