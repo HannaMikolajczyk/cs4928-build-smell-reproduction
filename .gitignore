@@ -6,6 +6,7 @@ venv/
 
 # Downloaded repositories and temporary files
 repos/
+.tools/
 tmp/
 audit/oracleJdk-27/
 
