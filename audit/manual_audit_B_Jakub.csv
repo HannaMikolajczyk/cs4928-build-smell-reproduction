@@ -1,0 +1,33 @@
+case_id,smell,source_check,definition_match,contextual_harm,evidence,reasoning
+J8-31,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-31,Missing Dependency Version,Yes,Yes,No,spring-boot-starter-web lacks <version>,False Positive. Safely managed by spring-boot-starter-parent.
+J8-32,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-32,Missing Dependency Version,Yes,Yes,No,zipkin-server lacks <version>,False Positive. Safely managed by dependencyManagement BOM.
+J8-33,Insecure URLs,Yes,Yes,Yes,<url>http://oss.sonatype.org/content/repositories/snapshots</url>,True Smell. Unencrypted external repository URL exposes the build to MitM attacks.
+J8-34,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-35,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-36,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-36,Duplicate,Yes,Yes,Yes,jackson-databind declared twice (v2.7.5 and v2.5.0),True Smell. Conflicting duplicate versions cause unpredictable resolution and maintenance issues.
+J8-37,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-37,Missing Dependency Version,Yes,Yes,No,javaee-api lacks <version>,False Positive. Safely managed by dependencyManagement BOM.
+J8-38,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-38,Missing Dependency Version,Yes,Yes,No,spring-boot-starter-web lacks <version>,False Positive. Safely managed by spring-boot-starter-parent.
+J8-38,Duplicate,Yes,Yes,Yes,spring-boot-starter-test declared twice,True Smell. Structural duplication where one has exclusions and the other does not causes dependency tree confusion.
+J8-39,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-40,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-41,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-41,Missing Dependency Version,Yes,Yes,No,spring-boot-starter-web lacks <version>,False Positive. Safely managed by spring-boot-starter-parent.
+J8-42,Insecure URLs,Yes,Yes,No,http://localhost:4502 and Apache license links,False Positive. Localhost and informational license links are not remote network risks.
+J8-43,Insecure URLs,Yes,Yes,Yes,<url>http://maven.aksw.org/repository/internal/</url>,True Smell. Custom unencrypted repository URL allows MitM dependency injection.
+J8-43,Missing Dependency Version,Yes,Yes,No,commons-collections4 lacks <version>,False Positive. Safely managed by spring-boot-starter-parent.
+J8-44,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-44,Missing Dependency Version,Yes,Yes,No,spring-boot-starter-web lacks <version>,False Positive. Safely managed by spring-boot-starter-parent.
+J8-44,Duplicate,Yes,Yes,Yes,spring-boot-starter-web declared twice,True Smell. Same artifact declared twice (one with exclusions) creating a brittle build script.
+J8-45,Insecure URLs,Yes,No,No,http://www.gnu.org/licenses/lgpl.html,False Positive. Standard Maven XML schema and informational license link.
+J8-46,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-46,Missing Dependency Version,Yes,Yes,Yes,atlassian-spring-scanner-external-jar lacks <version> and no parent/BOM exists.,True Smell. Dependency lacks a version and is not centrally managed risking a broken build on updates.
+J8-47,Insecure URLs,Yes,No,No,http://www.opensource.org/licenses/mit-license.php,False Positive. Standard Maven XML schema and informational license link.
+J8-48,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-49,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-50,Insecure URLs,Yes,No,No,"xmlns=""http://maven.apache.org/POM/4.0.0""",False Positive. Standard Maven XML schema namespace.
+J8-50,Missing Dependency Version,Yes,Yes,No,spring-webmvc lacks <version>,False Positive. Safely managed by dependencyManagement BOM.
