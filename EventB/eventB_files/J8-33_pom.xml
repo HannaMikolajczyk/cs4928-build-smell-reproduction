@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>eu.ace-design</groupId>
+  <artifactId>island-championship</artifactId>
+  <version>4.0</version>
+  <packaging>jar</packaging>
+  <name>Island :: 2019 Championship Runner</name>
+  <description>The Game Arena [2019]</description>
+
+
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <encoding>UTF-8</encoding>
+    <scala.version>2.11.8</scala.version>
+    <island.version>2.1-SNAPSHOT</island.version>
+  </properties>
+
+
+  <repositories>
+    <repository>
+      <id>oss.sonatype.org-snapshots</id>
+      <name>snapshots</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.ace-design</groupId>
+      <artifactId>island-arena</artifactId>
+      <version>${island.version}</version>
+    </dependency>
+    <!-- Import the Scala language -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+
+
+    <!-- ######### -->
+    <!-- # Teams # -->
+    <!-- ######### -->
+
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isd</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>ise</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isg</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isj</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isl</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>iso</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isr</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>iss</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>ist</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isu</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isw</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <!-- <dependency>
+        <groupId>ca.uqam.inf5153.island</groupId>
+        <artifactId>isz</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency> -->
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.10.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.10.0</version>
+    </dependency>
+  </dependencies>
+
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+      <!-- Scala Compilation -->
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>3.1.3</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <jvmArgs>
+                <jvmArg>-Xms64m</jvmArg>
+                <jvmArg>-Xmx1024m</jvmArg>
+              </jvmArgs>
+              <args>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
+                <arg>-dependencyfile</arg>
+                <arg>${project.build.directory}/.scala_dependencies</arg>
+              </args>
+            </configuration>
+          </execution>
+        </executions>
+          <configuration>
+              <!-- mvn scala:run -Dlauncher=regular -->
+              <launchers>
+                  <launcher>
+                  <id>regular</id>
+                  <mainClass>Main</mainClass>
+                  <jvmArgs>
+                      <jvmArg>-Xms64m</jvmArg>
+                        <jvmArg>-Xmx1024m</jvmArg>
+                  </jvmArgs>
+              </launcher>
+              </launchers>
+          </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

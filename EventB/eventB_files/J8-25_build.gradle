@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '2.4.0'
+    id 'org.jetbrains.kotlin.kapt' version '2.4.0'
+    id "com.gradleup.shadow" version "9.4.3"
+    id 'maven-publish'
+}
+
+allprojects {
+    group 'ltd.matrixstudios'
+    version '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://repo.enonic.com/public/' }
+        maven { url "https://oss.sonatype.org/content/groups/public/" }
+        maven { url "https://repo.aikar.co/content/groups/aikar/" }
+        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
+        maven { url 'https://repo.extendedclip.com/releases/' }
+    }
+}
+
+subprojects {
+    apply plugin: "java"
+    apply plugin: "org.jetbrains.kotlin.jvm"
+    apply plugin: "org.jetbrains.kotlin.kapt"
+    apply plugin: "com.gradleup.shadow"
+    apply plugin: "maven-publish"
+
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib"
+
+        //lombok
+        compileOnly 'org.projectlombok:lombok:1.18.22'
+        kapt 'org.projectlombok:lombok:1.18.22'
+
+        //apache
+        implementation 'org.apache.maven:maven-artifact:3.0.3'
+
+        //mongo
+        implementation 'org.mongodb:mongodb-driver-legacy:4.11.1'
+
+        //redis
+        implementation 'redis.clients:jedis:5.2.0'
+
+        //gson
+        implementation 'com.google.code.gson:gson:2.10.1'
+    }
+
+    java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+    }
+
+    compileKotlin {
+        kotlinOptions.javaParameters = true
+        kotlinOptions.jvmTarget = "1.8"
+    }
+}
